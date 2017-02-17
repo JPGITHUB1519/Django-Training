@@ -1,35 +1,40 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
+from django.views import generic
 from .models import Question, Choice
 
+"""
+Generic View Explanation
+Detail View -> traer un objeto de la base de datos (DetailVew), 
+ListView - > Lista de Objetos
+(CreateView, UpdateView y DeleteView) -> para crear, actualizar o borrar 
+"""
+
 # Create your views here.
+class IndexView(generic.ListView):
+	""" ListView view to representing a list of objects."""
+	template_name = 'polls/index.html'
+	# changing template context model name
+	context_object_name = 'latest_question_list'
 
-def index(request):
-	# gettip top 5 lattest post
-	latest_question_list = Question.objects.order_by("-pub_date")[:5]
-	#output = ", ".join([q.question_text for q in latest_question_list])
-	# render template
-	context = {
-		"latest_question_list" : latest_question_list,
-	}
-	return render(request, 'polls/index.html', context)
+	def get_queryset(self):
+		"""Return the last five published questions."""
+		return Question.objects.order_by("-pub_date")[:5]
 
-def detail(request, question_id):
-	# long form
-	# try:
-	# 	question = Question.objects.get(pk=question_id)
-	# except Question.DoesNotExits:
-	# 	# 404 Error
-	# 	raise Http404("Question does not exit")
+class DetailView(generic.DetailView):
+	""" Use detail View para obtener un solo objeto de l bd
+		needs the primary key to find the right object to display
+	"""
+	""" View to show the Questions Data filter by the pk """
+	model = Question
+	template_name = 'polls/detail.html'
+	# using the default ContextName question
 
-	# 404 shorcut if the record was not found
-	question = get_object_or_404(Question, pk=question_id)
-	return render(request, 'polls/detail.html', {'question': question})
-
-def results(request, question_id):
-	question = get_object_or_404(Question, pk=question_id)
-	return render(request, 'polls/results.html', {'question' : question})
+class ResultsView(generic.DetailView):
+	""" View to show the results vote from a Question"""
+	model = Question
+	template_name = 'polls/results.html'
 
 def vote(request, question_id):
 	question = get_object_or_404(Question, pk=question_id)
